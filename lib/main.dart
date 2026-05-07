@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'core/theme/app_theme.dart';
-import 'features/auth/presentation/pages/login_page.dart';
-import 'features/collection/collection_module.dart';
-import 'features/collection/presentation/controllers/collection_controller.dart';
-import 'features/collection/presentation/pages/dashboard_page.dart';
-import 'features/collection/presentation/pages/home_page.dart';
+import 'controllers/collection_controller.dart';
+import 'pages/dashboard_page.dart';
+import 'pages/home_page.dart';
+import 'pages/login_page.dart';
+import 'services/auth_service.dart';
+import 'services/collection_service.dart';
+import 'services/database_helper.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  setupCollectionModule();
+
+  final db = DatabaseHelper.instance;
+  final authService = AuthService(db);
+  final collectionService = CollectionService(db);
+  final controller = CollectionController(collectionService);
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => getIt<CollectionController>(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: controller),
+        Provider.value(value: authService),
+      ],
       child: const MeuAcervoApp(),
     ),
   );
@@ -25,9 +34,18 @@ class MeuAcervoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MeuAcervo',
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6750A4)),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6750A4),
+          brightness: Brightness.dark,
+        ),
+      ),
       home: const LoginPage(),
     );
   }
@@ -41,18 +59,18 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _abaSelecionada = 0;
+  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
-        index: _abaSelecionada,
+        index: _index,
         children: const [HomePage(), DashboardPage()],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _abaSelecionada,
-        onDestinationSelected: (i) => setState(() => _abaSelecionada = i),
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.collections_bookmark_outlined),
