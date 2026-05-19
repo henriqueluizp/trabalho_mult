@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(flutter pub *)",
-      "Bash(python3 -c ' *)",
-      "Bash(flutter analyze *)"
-    ]
-  }
-}
